@@ -7,18 +7,49 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
 
+// RequestValues hold form values from a validated Request
+type RequestValues map[string]string
+
+// CallDuration Parses the duration rom the string value
+func (r RequestValues) CallDuration() (int, error) {
+	var duration int
+	if r["CallDuration"] != "" {
+		if d, err := strconv.Atoi(r["CallDuration"]); err != nil {
+			return 0, errors.WithMessage(err, "RequestValues.CallDuration()")
+		} else {
+			duration = d
+		}
+	}
+	return duration, nil
+}
+
+// SequenceNumber Parses the duration rom the string value
+func (r RequestValues) SequenceNumber() (int, error) {
+	var seq int
+	if r["SequenceNumber"] != "" {
+		if d, err := strconv.Atoi(r["SequenceNumber"]); err != nil {
+			return 0, errors.WithMessage(err, "RequestValues.SequenceNumber()")
+		} else {
+			seq = d
+		}
+	}
+	return seq, nil
+}
+
 // Request is a twillio request expecting a TwiML response
 type Request struct {
-	r *http.Request
+	r      *http.Request
+	Values RequestValues
 }
 
 // NewRequest returns Request
 func NewRequest(r *http.Request) *Request {
-	return &Request{r: r}
+	return &Request{r: r, Values: RequestValues{}}
 }
 
 // ValidatePost validates the Twilio Signature, requiring that the request is a POST
@@ -40,7 +71,9 @@ func (req *Request) ValidatePost(authToken string) error {
 	message := req.r.URL.String()
 	for _, p := range params {
 		message += p
-		message += req.r.PostForm[p][0]
+		if len(req.r.PostForm[p]) > 0 {
+			message += req.r.PostForm[p][0]
+		}
 	}
 
 	hash := hmac.New(sha1.New, []byte(authToken))
@@ -56,98 +89,49 @@ func (req *Request) ValidatePost(authToken string) error {
 		}
 		return fmt.Errorf("twiml.Request.ValidatePost(): Calculated Signature: %s, failed to match X-Twilio-Signature: %s", sig, xTwilioSig)
 	}
+
+	// Validate data
+	for _, p := range params {
+		var val string
+		if len(req.r.PostForm[p]) > 0 {
+			val = req.r.PostForm[p][0]
+		}
+		if valParam, ok := fieldValidators[p]; ok {
+			if err := valParam.valFunc(val, valParam.valParam); err != nil {
+				return fmt.Errorf("twiml.Request.ValidatePost(): Invalid form value: %s=%s, err: %s", p, val, err)
+			}
+		}
+		req.Values[p] = val
+	}
+
 	return nil
 }
 
-func (req *Request) form(key string) string {
-	value, exists := req.r.PostForm[key]
-	if exists {
-		return value[0]
-	}
-
-	return ""
+type valCfg struct {
+	valFunc  func(interface{}, string) error
+	valParam string
 }
 
-func (req *Request) CallSid() string {
-	return req.form("CallSid")
-}
-
-func (req *Request) AccountSid() string {
-	return req.form("AccountSid")
-}
-
-func (req *Request) From() string {
-	return req.form("From")
-}
-
-func (req *Request) To() string {
-	return req.form("To")
-}
-
-func (req *Request) CallStatus() string {
-	return req.form("CallStatus")
-}
-
-func (req *Request) ApiVersion() string {
-	return req.form("ApiVersion")
-}
-
-func (req *Request) ForwardedFrom() string {
-	return req.form("ForwardedFrom")
-}
-
-func (req *Request) CallerName() string {
-	return req.form("CallerName")
-}
-
-func (req *Request) ParentCallSid() string {
-	return req.form("ParentCallSid")
-}
-
-func (req *Request) FromCity() string {
-	return req.form("FromCity")
-}
-
-func (req *Request) FromState() string {
-	return req.form("FromState")
-}
-
-func (req *Request) FromZip() string {
-	return req.form("FromZip")
-}
-
-func (req *Request) FromCountry() string {
-	return req.form("FromCountry")
-}
-
-func (req *Request) ToCity() string {
-	return req.form("ToCity")
-}
-
-func (req *Request) ToZip() string {
-	return req.form("ToZip")
-}
-
-func (req *Request) ToCountry() string {
-	return req.form("ToCountry")
-}
-
-func (req *Request) SipDomain() string {
-	return req.form("SipDomain")
-}
-
-func (req *Request) SipUsername() string {
-	return req.form("SipUsername")
-}
-
-func (req *Request) SipCallId() string {
-	return req.form("SipCallId")
-}
-
-func (req *Request) SipSourceIp() string {
-	return req.form("SipSourceIp")
-}
-
-func (req *Request) Digits() string {
-	return req.form("Digits")
+var fieldValidators = map[string]valCfg{
+	// "CallSid":       "CallSid",
+	// "AccountSid":    "AccountSid",
+	"From": valCfg{valFunc: validPhoneNumber},
+	"To":   valCfg{valFunc: validPhoneNumber},
+	// "CallStatus":    "CallStatus",
+	// "ApiVersion":    "ApiVersion",
+	// "ForwardedFrom": "ForwardedFrom",
+	// "CallerName":    "CallerName",
+	// "ParentCallSid": "ParentCallSid",
+	// "FromCity":      "FromCity",
+	// "FromState":     "FromState",
+	// "FromZip":       "FromZip",
+	// "FromCountry":   "FromCountry",
+	// "ToCity":        "ToCity",
+	// "ToZip":         "ToZip",
+	// "ToCountry":     "ToCountry",
+	// "SipDomain":     "SipDomain",
+	// "SipUsername":   "SipUsername",
+	// "SipCallId":     "SipCallId",
+	// "SipSourceIp":   "SipSourceIp",
+	"Digits": valCfg{valFunc: validNumeric},
 }

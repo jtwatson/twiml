@@ -35,15 +35,13 @@ func TestResponse_Render(t *testing.T) {
 
 	response2 := NewResponse().
 		Dial(NewDial().
-			Number(NewNumber("810-730-3842")).
-			Say(NewSay("Hi, its me."))).
+			Number(NewNumber("810-730-3842"))).
 		Say(NewSay("Failed to connect"))
 
 	xml2 := header + `
 <Response>
   <Dial>
     <Number>810-730-3842</Number>
-    <Say>Hi, its me.</Say>
   </Dial>
   <Say>Failed to connect</Say>
 </Response>`
@@ -89,7 +87,7 @@ func TestResponse_Render(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.response.String()
+			got, err := tt.response.Render()
 			if err != nil {
 				t.Errorf("Response.Render() = %v, want %v", err, tt.wantErr)
 			}

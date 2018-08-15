@@ -6,14 +6,15 @@ import (
 	"io"
 )
 
-type methodType string
+// MethodType is an enum for the http method
+type MethodType string
 
 const (
 	// Post represents an HTTP POST method
-	Post methodType = "POST"
+	Post MethodType = "POST"
 
 	// Get represents an HTTP GETmethod
-	Get methodType = "GET"
+	Get MethodType = "GET"
 )
 
 // Response represents the TwiML Response Verb
@@ -68,21 +69,21 @@ func (r *Response) Render() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// WriteTo writes the Rendered TwiML to the writer
-func (r *Response) WriteTo(w io.Writer) (int64, error) {
+// RenderTo writes the Rendered TwiML to the writer
+func (r *Response) RenderTo(w io.Writer) error {
 	res, err := r.Render()
 	if err != nil {
-		return 0, err
+		return err
 	}
-	n, err := w.Write(res)
-	return int64(n), err
+	_, err = w.Write(res)
+	return err
 }
 
 // Dial represents the TwiML Dial Verb
 type Dial struct {
 	XMLName xml.Name   `xml:"Dial"`
 	Action  string     `xml:"action,attr,omitempty"`
-	Method  methodType `xml:"method,attr,omitempty"`
+	Method  MethodType `xml:"method,attr,omitempty"`
 	Timeout uint       `xml:"timeout,attr,omitempty"`
 	Verbs   []interface{}
 }
@@ -92,15 +93,15 @@ func NewDial() *Dial {
 	return &Dial{}
 }
 
-// Say appends a Say verb to Dial
-func (d *Dial) Say(say *Say) *Dial {
-	d.Verbs = append(d.Verbs, say)
-	return d
-}
-
 // Number appends a Number verb to Dial
 func (d *Dial) Number(number *Number) *Dial {
 	d.Verbs = append(d.Verbs, number)
+	return d
+}
+
+// Conference appends a Conference verb to Dial
+func (d *Dial) Conference(conference *Conference) *Dial {
+	d.Verbs = append(d.Verbs, conference)
 	return d
 }
 
@@ -161,12 +162,12 @@ type Gather struct {
 	XMLName                     xml.Name   `xml:"Gather"`
 	Input                       string     `xml:"input,attr,omitempty"`
 	Action                      string     `xml:"action,attr,omitempty"`
-	Method                      methodType `xml:"method,attr,omitempty"`
+	Method                      MethodType `xml:"method,attr,omitempty"`
 	Timeout                     uint       `xml:"timeout,attr,omitempty"`
 	FinishOnKey                 *string    `xml:"finishOnKey,attr"`
 	NumDigits                   uint       `xml:"numDigits,attr,omitempty"`
 	PartialResultCallback       string     `xml:"partialResultCallback,attr,omitempty"`
-	PartialResultCallbackMethod methodType `xml:"partialResultCallbackMethod,attr,omitempty"`
+	PartialResultCallbackMethod MethodType `xml:"partialResultCallbackMethod,attr,omitempty"`
 	Language                    string     `xml:"language,attr,omitempty"`
 	Hints                       string     `xml:"hints,attr,omitempty"`
 	ProfanityFilter             bool       `xml:"profanityFilter,attr,omitempty"`
@@ -204,7 +205,7 @@ func (g *Gather) SetAction(action string) *Gather {
 }
 
 // SetMethod sets the method attribute
-func (g *Gather) SetMethod(method methodType) *Gather {
+func (g *Gather) SetMethod(method MethodType) *Gather {
 	g.Method = method
 	return g
 }
@@ -229,7 +230,7 @@ func NewPause(length uint) *Pause {
 // Redirect represents the TwiML Redirect verb
 type Redirect struct {
 	XMLName xml.Name   `xml:"Redirect"`
-	Method  methodType `xml:"method,attr,omitempty"`
+	Method  MethodType `xml:"method,attr,omitempty"`
 	Value   string     `xml:",chardata"`
 }
 
@@ -239,7 +240,161 @@ func NewRedirect(redirect string) *Redirect {
 }
 
 // SetMethod sets the method attribute
-func (r *Redirect) SetMethod(method methodType) *Redirect {
+func (r *Redirect) SetMethod(method MethodType) *Redirect {
 	r.Method = method
 	return r
+}
+
+// BeepType is an enum type for Beep
+type BeepType string
+
+const (
+	// BeepsOn beeps on enter and exit
+	BeepsOn BeepType = "true"
+
+	// BeepsOff disables beeps
+	BeepsOff BeepType = "false"
+
+	// BeepOnEnter beeps on enter only
+	BeepOnEnter BeepType = "onEnter"
+
+	// BeepOnExit beeps on exit only
+	BeepOnExit BeepType = "onExit"
+)
+
+// Conference represents the twiml Conference verb
+type Conference struct {
+	XMLName                       xml.Name   `xml:"Conference"`
+	Muted                         bool       `xml:"muted,attr,omitempty"`
+	Beep                          BeepType   `xml:"beep,attr,omitempty"`
+	StartConferenceOnEnter        *bool      `xml:"startConferenceOnEnter,attr"`
+	EndConferenceOnExit           bool       `xml:"endConferenceOnExit,attr,omitempty"`
+	WaitURL                       *string    `xml:"waitUrl,attr"`
+	WaitMethod                    MethodType `xml:"waitMethod,attr,omitempty"`
+	MaxParticipants               int        `xml:"maxParticipants,attr,omitempty"`
+	Record                        string     `xml:"record,attr,omitempty"`
+	Region                        string     `xml:"region,attr,omitempty"`
+	Trim                          string     `xml:"trim,attr,omitempty"`
+	Coach                         string     `xml:"coach,attr,omitempty"`
+	StatusCallbackEvent           string     `xml:"statusCallbackEvent,attr,omitempty"`
+	StatusCallback                string     `xml:"statusCallback,attr,omitempty"`
+	StatusCallbackMethod          MethodType `xml:"statusCallbackMethod,attr,omitempty"`
+	RecordingStatusCallback       string     `xml:"recordingStatusCallback,attr,omitempty"`
+	RecordingStatusCallbackMethod MethodType `xml:"recordingStatusCallbackMethod,attr,omitempty"`
+	RecordingStatusCallbackEvent  string     `xml:"recordingStatusCallbackEvent,attr,omitempty"`
+	EventCallbackURL              string     `xml:"eventCallbackUrl,attr,omitempty"`
+	Value                         string     `xml:",chardata"`
+}
+
+// NewConference returns a Conference verb
+func NewConference(conferenceName string) *Conference {
+	return &Conference{Value: conferenceName}
+}
+
+// SetMuted sets the muted attribute
+func (c *Conference) SetMuted(muted bool) *Conference {
+	c.Muted = muted
+	return c
+}
+
+// SetBeep sets the beep attribute
+func (c *Conference) SetBeep(beep BeepType) *Conference {
+	c.Beep = beep
+	return c
+}
+
+// SetStartConferenceOnEnter sets the startConferenceOnEnter attribute
+func (c *Conference) SetStartConferenceOnEnter(startConferenceOnEnter bool) *Conference {
+	c.StartConferenceOnEnter = &startConferenceOnEnter
+	return c
+}
+
+// SetEndConferenceOnExit sets the endConferenceOnExit attribute
+func (c *Conference) SetEndConferenceOnExit(endConferenceOnExit bool) *Conference {
+	c.EndConferenceOnExit = endConferenceOnExit
+	return c
+}
+
+// SetWaitURL sets the waitURL attribute
+func (c *Conference) SetWaitURL(waitURL string) *Conference {
+	c.WaitURL = &waitURL
+	return c
+}
+
+// SetWaitMethod sets the waitMethod attribute
+func (c *Conference) SetWaitMethod(waitMethod MethodType) *Conference {
+	c.WaitMethod = waitMethod
+	return c
+}
+
+// SetMaxParticipants sets the maxParticipants attribute
+func (c *Conference) SetMaxParticipants(maxParticipants int) *Conference {
+	c.MaxParticipants = maxParticipants
+	return c
+}
+
+// SetRecord sets the record attribute
+func (c *Conference) SetRecord(record string) *Conference {
+	c.Record = record
+	return c
+}
+
+// SetRegion sets the region attribute
+func (c *Conference) SetRegion(region string) *Conference {
+	c.Region = region
+	return c
+}
+
+// SetTrim sets the trim attribute
+func (c *Conference) SetTrim(trim string) *Conference {
+	c.Trim = trim
+	return c
+}
+
+// SetCoach sets the coach attribute
+func (c *Conference) SetCoach(coach string) *Conference {
+	c.Coach = coach
+	return c
+}
+
+// SetStatusCallbackEvent sets the statusCallbackEvent attribute
+func (c *Conference) SetStatusCallbackEvent(statusCallbackEvent string) *Conference {
+	c.StatusCallbackEvent = statusCallbackEvent
+	return c
+}
+
+// SetStatusCallback sets the statusCallback attribute
+func (c *Conference) SetStatusCallback(statusCallback string) *Conference {
+	c.StatusCallback = statusCallback
+	return c
+}
+
+// SetStatusCallbackMethod sets the statusCallbackMethod attribute
+func (c *Conference) SetStatusCallbackMethod(statusCallbackMethod MethodType) *Conference {
+	c.StatusCallbackMethod = statusCallbackMethod
+	return c
+}
+
+// SetRecordingStatusCallback sets the recordingStatusCallback attribute
+func (c *Conference) SetRecordingStatusCallback(recordingStatusCallback string) *Conference {
+	c.RecordingStatusCallback = recordingStatusCallback
+	return c
+}
+
+// SetRecordingStatusCallbackMethod sets the recordingStatusCallbackMethod attribute
+func (c *Conference) SetRecordingStatusCallbackMethod(recordingStatusCallbackMethod MethodType) *Conference {
+	c.RecordingStatusCallbackMethod = recordingStatusCallbackMethod
+	return c
+}
+
+// SetRecordingStatusCallbackEvent sets the recordingStatusCallbackEvent attribute
+func (c *Conference) SetRecordingStatusCallbackEvent(recordingStatusCallbackEvent string) *Conference {
+	c.RecordingStatusCallbackEvent = recordingStatusCallbackEvent
+	return c
+}
+
+// SetEventCallbackURL sets the eventCallbackURL attribute
+func (c *Conference) SetEventCallbackURL(eventCallbackURL string) *Conference {
+	c.EventCallbackURL = eventCallbackURL
+	return c
 }
