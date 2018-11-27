@@ -3,7 +3,9 @@ package twiml
 import (
 	"bytes"
 	"encoding/xml"
+	"fmt"
 	"io"
+	"strings"
 )
 
 // MethodType is an enum for the http method
@@ -125,6 +127,9 @@ const (
 
 	// AliceVoice is used in Say to select alice voice
 	AliceVoice VoiceType = "alice"
+
+	// PollyMatthew is used in Say to select Amazon Poly voice Matthew
+	PollyMatthew VoiceType = "Polly.Matthew"
 )
 
 // Say represents the TwiML Say verb
@@ -358,8 +363,8 @@ func (c *Conference) SetCoach(coach string) *Conference {
 }
 
 // SetStatusCallbackEvent sets the statusCallbackEvent attribute
-func (c *Conference) SetStatusCallbackEvent(statusCallbackEvent string) *Conference {
-	c.StatusCallbackEvent = statusCallbackEvent
+func (c *Conference) SetStatusCallbackEvent(statusCallbackEvent conferenceCallbackEvents) *Conference {
+	c.StatusCallbackEvent = string(statusCallbackEvent)
 	return c
 }
 
@@ -397,4 +402,47 @@ func (c *Conference) SetRecordingStatusCallbackEvent(recordingStatusCallbackEven
 func (c *Conference) SetEventCallbackURL(eventCallbackURL string) *Conference {
 	c.EventCallbackURL = eventCallbackURL
 	return c
+}
+
+// start end join leave mute hold speaker
+type conferenceCallbackEvents string
+
+// ConferenceCallbackEvents enables specific Callback Events
+func ConferenceCallbackEvents() conferenceCallbackEvents {
+	return conferenceCallbackEvents("")
+}
+
+// Start enables the Callback Event to indicate Conference has Started
+func (c conferenceCallbackEvents) Start() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s start", c), " "))
+}
+
+// End enables the Callback Event to indicate Conference has Ended
+func (c conferenceCallbackEvents) End() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s end", c), " "))
+}
+
+// Join enables the Callback Event to indicate Participant has joined
+func (c conferenceCallbackEvents) Join() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s join", c), " "))
+}
+
+// Leave enables the Callback Event to indicate Participant has left
+func (c conferenceCallbackEvents) Leave() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s leave", c), " "))
+}
+
+// Mute enables the Callback Event to indicate Participant has been muted/unmuted
+func (c conferenceCallbackEvents) Mute() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s mute", c), " "))
+}
+
+// Hold enables the Callback Event to indicate Participant has been held
+func (c conferenceCallbackEvents) Hold() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s hold", c), " "))
+}
+
+// Speaker enables the Callback Event to indicate Participant has started/stoped speaking
+func (c conferenceCallbackEvents) Speaker() conferenceCallbackEvents {
+	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s speaker", c), " "))
 }

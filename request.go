@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -41,14 +42,25 @@ func (r RequestValues) SequenceNumber() (int, error) {
 	return seq, nil
 }
 
+// TimestampOrNow parses the Timestamp from string. If Timestamp does not exist in the
+// current request, time.Now() is returned instead.
+func (r RequestValues) TimestampOrNow() time.Time {
+	t, err := time.Parse(time.RFC1123Z, r["Timestamp"])
+	if err != nil {
+		t = time.Now()
+	}
+	return t
+}
+
 // Request is a twillio request expecting a TwiML response
 type Request struct {
+	host   string
 	r      *http.Request
 	Values RequestValues
 }
 
 // NewRequest returns Request
-func NewRequest(r *http.Request) *Request {
+func NewRequest(host string, r *http.Request) *Request {
 	return &Request{r: r, Values: RequestValues{}}
 }
 
@@ -68,7 +80,7 @@ func (req *Request) ValidatePost(authToken string) error {
 	}
 	sort.Sort(sort.StringSlice(params))
 
-	message := req.r.URL.String()
+	message := req.host + req.r.URL.String()
 	for _, p := range params {
 		message += p
 		if len(req.r.PostForm[p]) > 0 {
@@ -77,8 +89,11 @@ func (req *Request) ValidatePost(authToken string) error {
 	}
 
 	hash := hmac.New(sha1.New, []byte(authToken))
-	if n, err := hash.Write([]byte(message)); err != nil || n != len(message) {
-		return err
+	if n, err := hash.Write([]byte(message)); err != nil {
+		return errors.WithMessage(err, "twiml.Request.ValidatePost(): hash.Write()")
+	} else if n != len(message) {
+		err := fmt.Errorf("expected %d bytes, got %d bytes", len(message), n)
+		return errors.WithMessage(err, "twiml.Request.ValidatePost(): hash.Write()")
 	}
 	sig := base64.StdEncoding.EncodeToString(hash.Sum(nil))
 
