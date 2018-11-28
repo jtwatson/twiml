@@ -61,7 +61,7 @@ type Request struct {
 
 // NewRequest returns Request
 func NewRequest(host string, r *http.Request) *Request {
-	return &Request{r: r, Values: RequestValues{}}
+	return &Request{host: host, r: r, Values: RequestValues{}}
 }
 
 // ValidatePost validates the Twilio Signature, requiring that the request is a POST
