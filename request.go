@@ -1,6 +1,7 @@
 package twiml
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 // RequestValues hold form values from a validated Request
@@ -65,7 +67,13 @@ func NewRequest(host string, r *http.Request) *Request {
 }
 
 // ValidatePost validates the Twilio Signature, requiring that the request is a POST
-func (req *Request) ValidatePost(authToken string) error {
+func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
+	_, span := trace.StartSpan(ctx, "twiml.Request.ValidatePost()")
+	defer span.End()
+
+	url := req.host + req.r.URL.String()
+	span.AddAttributes(trace.StringAttribute("url", url))
+
 	if req.r.Method != "POST" {
 		return fmt.Errorf("twiml.Request.ValidatePost(): Expected a POST request, received %s", req.r.Method)
 	}
@@ -80,7 +88,7 @@ func (req *Request) ValidatePost(authToken string) error {
 	}
 	sort.Sort(sort.StringSlice(params))
 
-	message := req.host + req.r.URL.String()
+	message := url
 	for _, p := range params {
 		message += p
 		if len(req.r.PostForm[p]) > 0 {

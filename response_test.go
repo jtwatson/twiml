@@ -1,12 +1,15 @@
 package twiml
 
 import (
+	"context"
 	"encoding/xml"
 	"reflect"
 	"testing"
 )
 
 func TestResponse_Render(t *testing.T) {
+
+	ctx := context.Background()
 
 	header := xml.Header[:len(xml.Header)-1]
 
@@ -87,7 +90,7 @@ func TestResponse_Render(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.response.Render()
+			got, err := tt.response.Render(ctx)
 			if err != nil {
 				t.Errorf("Response.Render() = %v, want %v", err, tt.wantErr)
 			}

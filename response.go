@@ -2,10 +2,13 @@ package twiml
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"strings"
+
+	"go.opencensus.io/trace"
 )
 
 // MethodType is an enum for the http method
@@ -60,7 +63,10 @@ func (r *Response) Redirect(redirect *Redirect) *Response {
 }
 
 // Render returns a reader which returns the rendered twiml response
-func (r *Response) Render() ([]byte, error) {
+func (r *Response) Render(ctx context.Context) ([]byte, error) {
+	ctx, span := trace.StartSpan(ctx, "twiml.Response.Render()")
+	defer span.End()
+
 	buff := new(bytes.Buffer)
 	buff.WriteString(xml.Header)
 	enc := xml.NewEncoder(buff)
@@ -68,12 +74,17 @@ func (r *Response) Render() ([]byte, error) {
 	if err := enc.Encode(r); err != nil {
 		return nil, err
 	}
+	span.AddAttributes(trace.StringAttribute("twiml", buff.String()))
+
 	return buff.Bytes(), nil
 }
 
 // RenderTo writes the Rendered TwiML to the writer
-func (r *Response) RenderTo(w io.Writer) error {
-	res, err := r.Render()
+func (r *Response) RenderTo(ctx context.Context, w io.Writer) error {
+	ctx, span := trace.StartSpan(ctx, "twiml.Response.RenderTo()")
+	defer span.End()
+
+	res, err := r.Render(ctx)
 	if err != nil {
 		return err
 	}
