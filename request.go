@@ -20,11 +20,11 @@ type RequestValues map[string]string
 func (r RequestValues) CallDuration() (int, error) {
 	var duration int
 	if r["CallDuration"] != "" {
-		if d, err := strconv.Atoi(r["CallDuration"]); err != nil {
+		d, err := strconv.Atoi(r["CallDuration"])
+		if err != nil {
 			return 0, errors.WithMessage(err, "RequestValues.CallDuration()")
-		} else {
-			duration = d
 		}
+		duration = d
 	}
 	return duration, nil
 }
@@ -33,11 +33,11 @@ func (r RequestValues) CallDuration() (int, error) {
 func (r RequestValues) SequenceNumber() (int, error) {
 	var seq int
 	if r["SequenceNumber"] != "" {
-		if d, err := strconv.Atoi(r["SequenceNumber"]); err != nil {
+		d, err := strconv.Atoi(r["SequenceNumber"])
+		if err != nil {
 			return 0, errors.WithMessage(err, "RequestValues.SequenceNumber()")
-		} else {
-			seq = d
 		}
+		seq = d
 	}
 	return seq, nil
 }
