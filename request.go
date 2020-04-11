@@ -18,7 +18,7 @@ import (
 // RequestValues hold form values from a validated Request
 type RequestValues map[string]string
 
-// CallDuration Parses the duration rom the string value
+// CallDuration Parses the duration from the string value
 func (r RequestValues) CallDuration() (int, error) {
 	var duration int
 	if r["CallDuration"] != "" {
@@ -156,5 +156,5 @@ var fieldValidators = map[string]valCfg{
 	// "SipUsername":   "SipUsername",
 	// "SipCallId":     "SipCallId",
 	// "SipSourceIp":   "SipSourceIp",
-	"Digits": valCfg{valFunc: validNumeric},
+	"Digits": valCfg{valFunc: validateKeyPadEntry},
 }
