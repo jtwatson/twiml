@@ -44,7 +44,7 @@ func validatePhoneNumber(num string) error {
 	return nil
 }
 
-func validNumeric(v interface{}, param string) error {
+func validateKeyPadEntry(v interface{}, param string) error {
 	switch num := v.(type) {
 	case string:
 		if num == "" {
@@ -53,7 +53,7 @@ func validNumeric(v interface{}, param string) error {
 			}
 			return errors.New("Required")
 		}
-		return validateNumeric(num)
+		return validateNumericPoundStar(num)
 	case *string:
 		if num == nil {
 			if param == "allowempty" {
@@ -61,14 +61,14 @@ func validNumeric(v interface{}, param string) error {
 			}
 			return errors.New("Required")
 		}
-		return validateNumeric(*num)
+		return validateNumericPoundStar(*num)
 	default:
 		return fmt.Errorf("validDatastoreKey: Unexpected type %T", num)
 	}
 }
 
-func validateNumeric(v string) error {
-	return characterList(v, "0123456789")
+func validateNumericPoundStar(v string) error {
+	return characterList(v, "0123456789#*")
 }
 
 // characterList checks a string against a list of acceptable characters.
