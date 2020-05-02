@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ttacon/libphonenumber"
 	"go.opencensus.io/trace"
 )
 
@@ -54,6 +56,76 @@ func (r RequestValues) TimestampOrNow() time.Time {
 	return t
 }
 
+// From returns a Number parsed from the raw From value
+func (r RequestValues) From() *ParsedNumber {
+	return ParseNumber(r["From"])
+}
+
+// To returns a Number parsed from the raw To value
+func (r RequestValues) To() *ParsedNumber {
+	return ParseNumber(r["To"])
+}
+
+// ParseNumber parses ether a E164 number or a SIP URI returning a ParsedNumber
+func ParseNumber(v string) *ParsedNumber {
+	number := &ParsedNumber{
+		Number: v,
+		Raw:    v,
+	}
+
+	if err := validPhoneNumber(v, ""); err == nil {
+		number.Valid = true
+		return number
+	}
+
+	u, err := parseSipURI(v)
+	if err != nil {
+		return number
+	}
+
+	parts := strings.Split(u.Hostname(), ".")
+	l := len(parts)
+
+	if l < 5 || strings.Join(parts[l-2:], ".") != "twilio.com" || parts[l-4] != "sip" {
+		return number
+	}
+
+	num, err := FormatNumber(u.User.Username())
+	if err != nil {
+		return number
+	}
+
+	number.Valid = true
+	number.Sip = true
+	number.Number = num
+	number.SipDomain = strings.Join(parts[:l-4], ".")
+	number.Region = parts[l-4]
+
+	return number
+}
+
+type ParsedNumber struct {
+	Valid     bool
+	Number    string
+	Sip       bool
+	SipDomain string
+	Region    string
+	Raw       string
+}
+
+// FormatNumber formates a number to E164 format
+func FormatNumber(number string) (string, error) {
+	num, err := libphonenumber.Parse(number, "US")
+	if err != nil {
+		return number, errors.WithMessagef(errors.New("Invalid phone number"), "twiml.FormatNumber(): %s", err)
+	}
+	if !libphonenumber.IsValidNumber(num) {
+		return number, errors.WithMessage(errors.New("Invalid phone number"), "twiml.FormatNumber()")
+	}
+
+	return libphonenumber.Format(num, libphonenumber.E164), nil
+}
+
 // Request is a twillio request expecting a TwiML response
 type Request struct {
 	host   string
@@ -75,7 +147,7 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 	span.AddAttributes(trace.StringAttribute("url", url))
 
 	if req.r.Method != "POST" {
-		return fmt.Errorf("twiml.Request.ValidatePost(): Expected a POST request, received %s", req.r.Method)
+		return errors.WithMessage(fmt.Errorf("Expected a POST request, received %s", req.r.Method), "twiml.Request.ValidatePost()")
 	}
 
 	if err := req.r.ParseForm(); err != nil {
@@ -86,7 +158,7 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 	for p := range req.r.PostForm {
 		params = append(params, p)
 	}
-	sort.Sort(sort.StringSlice(params))
+	sort.Strings(params)
 
 	message := url
 	for _, p := range params {
@@ -110,7 +182,7 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 		if len(xTwilioSigHdr) == 1 {
 			xTwilioSig = xTwilioSigHdr[0]
 		}
-		return fmt.Errorf("twiml.Request.ValidatePost(): Calculated Signature: %s, failed to match X-Twilio-Signature: %s", sig, xTwilioSig)
+		return errors.WithMessage(fmt.Errorf("Calculated Signature: %s, failed to match X-Twilio-Signature: %s", sig, xTwilioSig), "twiml.Request.ValidatePost()")
 	}
 
 	// Validate data
@@ -121,7 +193,7 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 		}
 		if valParam, ok := fieldValidators[p]; ok {
 			if err := valParam.valFunc(val, valParam.valParam); err != nil {
-				return fmt.Errorf("twiml.Request.ValidatePost(): Invalid form value: %s=%s, err: %s", p, val, err)
+				return errors.WithMessage(fmt.Errorf("Invalid form value: %s=%s, err: %s", p, val, err), "twiml.Request.ValidatePost()")
 			}
 		}
 		req.Values[p] = val
@@ -138,8 +210,8 @@ type valCfg struct {
 var fieldValidators = map[string]valCfg{
 	// "CallSid":       "CallSid",
 	// "AccountSid":    "AccountSid",
-	"From": valCfg{valFunc: validPhoneNumber},
-	"To":   valCfg{valFunc: validPhoneNumber},
+	"From": valCfg{valFunc: validFromOrTo},
+	"To":   valCfg{valFunc: validFromOrTo},
 	// "CallStatus":    "CallStatus",
 	// "ApiVersion":    "ApiVersion",
 	// "ForwardedFrom": "ForwardedFrom",
