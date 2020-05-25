@@ -22,6 +22,20 @@ const (
 	Get MethodType = "GET"
 )
 
+// TrackType is an enum for the track type
+type TrackType string
+
+const (
+	// InboundTrack represents an inbound_track
+	InboundTrack TrackType = "inbound_track"
+
+	// OutboundTrack represents an outbound_track
+	OutboundTrack TrackType = "outbound_track"
+
+	// BothTracks represents an both_tracks
+	BothTracks TrackType = "both_tracks"
+)
+
 // Response represents the TwiML Response Verb
 type Response struct {
 	Verbs []interface{}
@@ -50,6 +64,18 @@ func (r *Response) Say(say *Say) *Response {
 	return r
 }
 
+// Play adds the play verb to the Response
+func (r *Response) Play(play *Play) *Response {
+	r.Verbs = append(r.Verbs, play)
+	return r
+}
+
+// Start adds the start verb to the Response
+func (r *Response) Start(start *Start) *Response {
+	r.Verbs = append(r.Verbs, start)
+	return r
+}
+
 // Pause appends a Pause verb to Dial
 func (r *Response) Pause(length uint) *Response {
 	r.Verbs = append(r.Verbs, NewPause(length))
@@ -62,9 +88,9 @@ func (r *Response) Redirect(redirect *Redirect) *Response {
 	return r
 }
 
-// Render returns a reader which returns the rendered twiml response
+// Render returns the rendered twiml response
 func (r *Response) Render(ctx context.Context) ([]byte, error) {
-	ctx, span := trace.StartSpan(ctx, "twiml.Response.Render()")
+	_, span := trace.StartSpan(ctx, "twiml.Response.Render()")
 	defer span.End()
 
 	buff := new(bytes.Buffer)
@@ -162,6 +188,12 @@ func (s *Say) SetVoice(voice VoiceType) *Say {
 	return s
 }
 
+// SetLoop sets the Loop value
+func (s *Say) SetLoop(loop uint) *Say {
+	s.Loop = loop
+	return s
+}
+
 // Number represents a phone number to call
 type Number struct {
 	XMLName xml.Name `xml:"Number"`
@@ -229,6 +261,12 @@ func (g *Gather) SetMethod(method MethodType) *Gather {
 // SetTimeout sets the timeout attribute
 func (g *Gather) SetTimeout(timeout uint) *Gather {
 	g.Timeout = timeout
+	return g
+}
+
+// SetNumDigits sets the numDigits attribute
+func (g *Gather) SetNumDigits(numDigits uint) *Gather {
+	g.NumDigits = numDigits
 	return g
 }
 
@@ -456,4 +494,122 @@ func (c conferenceCallbackEvents) Hold() conferenceCallbackEvents {
 // Speaker enables the Callback Event to indicate Participant has started/stoped speaking
 func (c conferenceCallbackEvents) Speaker() conferenceCallbackEvents {
 	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s speaker", c), " "))
+}
+
+// Play represents the TwiML Play verb
+type Play struct {
+	XMLName xml.Name `xml:"Play"`
+	Digits  string   `xml:"digits,attr,omitempty"`
+	Loop    uint     `xml:"loop,attr,omitempty"`
+	Value   string   `xml:",chardata"`
+}
+
+// NewPlay returns a Play verb
+func NewPlay(msg string) *Play {
+	return &Play{Value: msg}
+}
+
+// SetDigits sets the digits value
+func (p *Play) SetDigits(digits string) *Play {
+	p.Digits = digits
+	return p
+}
+
+// SetLoop sets the Loop value
+func (p *Play) SetLoop(loop uint) *Play {
+	p.Loop = loop
+	return p
+}
+
+// Start represents the TwiML Start verb
+type Start struct {
+	XMLName xml.Name `xml:"Start"`
+	Verbs   []interface{}
+}
+
+// NewStart returns a Start verb
+func NewStart() *Start {
+	return &Start{}
+}
+
+// Stream adds the stream verb to the Start
+func (s *Start) Stream(stream *Stream) *Start {
+	s.Verbs = append(s.Verbs, stream)
+	return s
+}
+
+// Stream represents the TwiML Stream verb
+type Stream struct {
+	XMLName              xml.Name   `xml:"Stream"`
+	Track                TrackType  `xml:"track,attr,omitempty"`
+	Name                 string     `xml:"name,attr,omitempty"`
+	URL                  string     `xml:"url,attr,omitempty"`
+	StatusCallback       string     `xml:"statusCallback,attr,omitempty"`
+	StatusCallbackMethod MethodType `xml:"statusCallbackMethod,attr,omitempty"`
+	Verbs                []interface{}
+}
+
+// NewStream returns a Stream verb
+func NewStream() *Stream {
+	return &Stream{}
+}
+
+// SetTrack sets the track value
+func (s *Stream) SetTrack(track TrackType) *Stream {
+	s.Track = track
+	return s
+}
+
+// SetName sets the Name attribute
+func (s *Stream) SetName(name string) *Stream {
+	s.Name = name
+	return s
+}
+
+// SetURL sets the URL attribute
+func (s *Stream) SetURL(url string) *Stream {
+	s.URL = url
+	return s
+}
+
+// SetStatusCallback sets the statusCallback attribute
+func (s *Stream) SetStatusCallback(statusCallback string) *Stream {
+	s.StatusCallback = statusCallback
+	return s
+}
+
+// SetStatusCallbackMethod sets the statusCallbackMethod attribute
+func (s *Stream) SetStatusCallbackMethod(statusCallbackMethod MethodType) *Stream {
+	s.StatusCallbackMethod = statusCallbackMethod
+	return s
+}
+
+// Parameter adds the stream verb to the Start
+func (s *Stream) Parameter(stream *Parameter) *Stream {
+	s.Verbs = append(s.Verbs, stream)
+	return s
+}
+
+// Parameter represents the TwiML Parameter verb
+type Parameter struct {
+	XMLName xml.Name `xml:"Parameter"`
+	Name    string   `xml:"name,attr,omitempty"`
+	Value   string   `xml:"value,attr,omitempty"`
+}
+
+// NewParameter returns a Parameter verb
+func NewParameter() *Parameter {
+	return &Parameter{}
+}
+
+// SetName sets the Name attribute
+func (s *Parameter) SetName(name string) *Parameter {
+	s.Name = name
+	return s
+}
+
+// SetValue sets the value attribute
+func (s *Parameter) SetValue(value string) *Parameter {
+	s.Value = value
+	return s
 }
