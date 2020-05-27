@@ -118,6 +118,12 @@ func (r *Response) RenderTo(ctx context.Context, w io.Writer) error {
 	return err
 }
 
+// Hangup adds the hangup verb to the Response
+func (r *Response) Hangup() *Response {
+	r.Verbs = append(r.Verbs, &Hangup{})
+	return r
+}
+
 // Dial represents the TwiML Dial Verb
 type Dial struct {
 	XMLName xml.Name   `xml:"Dial"`
@@ -612,4 +618,9 @@ func (s *Parameter) SetName(name string) *Parameter {
 func (s *Parameter) SetValue(value string) *Parameter {
 	s.Value = value
 	return s
+}
+
+// Hangup represents the TwiML Hangup verb
+type Hangup struct {
+	XMLName xml.Name `xml:"Hangup"`
 }
