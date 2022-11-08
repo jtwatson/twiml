@@ -1,0 +1,17 @@
+name: Release
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  release-please:
+    name: Run release-please
+    runs-on: ubuntu-latest
+    if: github.repository == 'jtwatson/twiml'
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: go
+          package-name: twiml
+          token: ${{ secrets.PAT_RELEASES }}
