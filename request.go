@@ -210,8 +210,8 @@ type valCfg struct {
 var fieldValidators = map[string]valCfg{
 	// "CallSid":       "CallSid",
 	// "AccountSid":    "AccountSid",
-	"From": valCfg{valFunc: validFromOrTo},
-	"To":   valCfg{valFunc: validFromOrTo},
+	"From": {valFunc: validFromOrTo},
+	"To":   {valFunc: validFromOrTo},
 	// "CallStatus":    "CallStatus",
 	// "ApiVersion":    "ApiVersion",
 	// "ForwardedFrom": "ForwardedFrom",
@@ -228,5 +228,5 @@ var fieldValidators = map[string]valCfg{
 	// "SipUsername":   "SipUsername",
 	// "SipCallId":     "SipCallId",
 	// "SipSourceIp":   "SipSourceIp",
-	"Digits": valCfg{valFunc: validateKeyPadEntry},
+	"Digits": {valFunc: validateKeyPadEntry},
 }
