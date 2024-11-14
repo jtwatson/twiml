@@ -21,7 +21,7 @@ import (
 type RequestValues map[string]string
 
 // CallDuration Parses the duration from the string value
-func (r RequestValues) CallDuration() (int, error) {
+func (r RequestValues) CallDuration() (time.Duration, error) {
 	var duration int
 	if r["CallDuration"] != "" {
 		d, err := strconv.Atoi(r["CallDuration"])
@@ -30,10 +30,10 @@ func (r RequestValues) CallDuration() (int, error) {
 		}
 		duration = d
 	}
-	return duration, nil
+	return time.Second * time.Duration(duration), nil
 }
 
-// SequenceNumber Parses the duration rom the string value
+// SequenceNumber Parses the sequence number from the string value
 func (r RequestValues) SequenceNumber() (int, error) {
 	var seq int
 	if r["SequenceNumber"] != "" {

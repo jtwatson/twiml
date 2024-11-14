@@ -3,16 +3,17 @@ package twiml
 import (
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestRequestValues_Duration(t *testing.T) {
 	tests := []struct {
 		name    string
 		r       RequestValues
-		want    int
+		want    time.Duration
 		wantErr bool
 	}{
-		{name: "Test 1", r: RequestValues{"CallDuration": "12"}, want: 12, wantErr: false},
+		{name: "Test 1", r: RequestValues{"CallDuration": "12"}, want: 12 * time.Second, wantErr: false},
 		{name: "Test 2", r: RequestValues{"CallDuration": "11 sec"}, want: 0, wantErr: true},
 	}
 	for _, tt := range tests {
