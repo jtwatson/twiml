@@ -1,3 +1,4 @@
+// package twiml implements tooling to create, parse, and validate Twilio Twiml requests and responses
 package twiml
 
 import (
@@ -12,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/go-playground/errors/v5"
 	"github.com/ttacon/libphonenumber"
 	"go.opencensus.io/trace"
 )
@@ -26,10 +27,11 @@ func (r RequestValues) CallDuration() (time.Duration, error) {
 	if r["CallDuration"] != "" {
 		d, err := strconv.Atoi(r["CallDuration"])
 		if err != nil {
-			return 0, errors.WithMessage(err, "RequestValues.CallDuration()")
+			return 0, errors.Wrap(err, "RequestValues.CallDuration()")
 		}
 		duration = d
 	}
+
 	return time.Second * time.Duration(duration), nil
 }
 
@@ -39,10 +41,11 @@ func (r RequestValues) SequenceNumber() (int, error) {
 	if r["SequenceNumber"] != "" {
 		d, err := strconv.Atoi(r["SequenceNumber"])
 		if err != nil {
-			return 0, errors.WithMessage(err, "RequestValues.SequenceNumber()")
+			return 0, errors.Wrap(err, "RequestValues.SequenceNumber()")
 		}
 		seq = d
 	}
+
 	return seq, nil
 }
 
@@ -53,6 +56,7 @@ func (r RequestValues) TimestampOrNow() time.Time {
 	if err != nil {
 		t = time.Now()
 	}
+
 	return t
 }
 
@@ -75,10 +79,11 @@ func ParseNumber(v string) *ParsedNumber {
 
 	if err := validPhoneNumber(v, ""); err == nil {
 		number.Valid = true
+
 		return number
 	}
 
-	u, err := parseSipURI(v)
+	u, err := parseSIPURI(v)
 	if err != nil {
 		return number
 	}
@@ -96,9 +101,9 @@ func ParseNumber(v string) *ParsedNumber {
 	}
 
 	number.Valid = true
-	number.Sip = true
+	number.SIP = true
 	number.Number = num
-	number.SipDomain = strings.Join(parts[:l-4], ".")
+	number.SIPDomain = strings.Join(parts[:l-4], ".")
 	number.Region = parts[l-4]
 
 	return number
@@ -107,8 +112,8 @@ func ParseNumber(v string) *ParsedNumber {
 type ParsedNumber struct {
 	Valid     bool
 	Number    string
-	Sip       bool
-	SipDomain string
+	SIP       bool
+	SIPDomain string
 	Region    string
 	Raw       string
 }
@@ -117,10 +122,10 @@ type ParsedNumber struct {
 func FormatNumber(number string) (string, error) {
 	num, err := libphonenumber.Parse(number, "US")
 	if err != nil {
-		return number, errors.WithMessagef(errors.New("Invalid phone number"), "twiml.FormatNumber(): %s", err)
+		return number, errors.Wrapf(errors.New("Invalid phone number"), "twiml.FormatNumber(): %s", err)
 	}
 	if !libphonenumber.IsValidNumber(num) {
-		return number, errors.WithMessage(errors.New("Invalid phone number"), "twiml.FormatNumber()")
+		return number, errors.Wrap(errors.New("Invalid phone number"), "twiml.FormatNumber()")
 	}
 
 	return libphonenumber.Format(num, libphonenumber.E164), nil
@@ -147,11 +152,11 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 	span.AddAttributes(trace.StringAttribute("url", url))
 
 	if req.r.Method != "POST" {
-		return errors.WithMessage(fmt.Errorf("Expected a POST request, received %s", req.r.Method), "twiml.Request.ValidatePost()")
+		return errors.Wrap(fmt.Errorf("expected a POST request, received %s", req.r.Method), "twiml.Request.ValidatePost()")
 	}
 
 	if err := req.r.ParseForm(); err != nil {
-		return errors.WithMessage(err, "twiml.Request.ValidatePost(): http.Request.ParseForm():")
+		return errors.Wrap(err, "http.Request.ParseForm()")
 	}
 
 	params := make([]string, 0, len(req.r.PostForm))
@@ -170,10 +175,11 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 
 	hash := hmac.New(sha1.New, []byte(authToken))
 	if n, err := hash.Write([]byte(message)); err != nil {
-		return errors.WithMessage(err, "twiml.Request.ValidatePost(): hash.Write()")
+		return errors.Wrap(err, "twiml.Request.ValidatePost(): hash.Write()")
 	} else if n != len(message) {
 		err := fmt.Errorf("expected %d bytes, got %d bytes", len(message), n)
-		return errors.WithMessage(err, "twiml.Request.ValidatePost(): hash.Write()")
+
+		return errors.Wrap(err, "twiml.Request.ValidatePost(): hash.Write()")
 	}
 	sig := base64.StdEncoding.EncodeToString(hash.Sum(nil))
 
@@ -182,7 +188,8 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 		if len(xTwilioSigHdr) == 1 {
 			xTwilioSig = xTwilioSigHdr[0]
 		}
-		return errors.WithMessage(fmt.Errorf("Calculated Signature: %s, failed to match X-Twilio-Signature: %s", sig, xTwilioSig), "twiml.Request.ValidatePost()")
+
+		return errors.Wrap(fmt.Errorf("calculated Signature: %s, failed to match X-Twilio-Signature: %s", sig, xTwilioSig), "twiml.Request.ValidatePost()")
 	}
 
 	// Validate data
@@ -193,7 +200,7 @@ func (req *Request) ValidatePost(ctx context.Context, authToken string) error {
 		}
 		if valParam, ok := fieldValidators[p]; ok {
 			if err := valParam.valFunc(val, valParam.valParam); err != nil {
-				return errors.WithMessage(fmt.Errorf("Invalid form value: %s=%s, err: %s", p, val, err), "twiml.Request.ValidatePost()")
+				return errors.Wrapf(err, "Invalid form value: %s=%s", p, val)
 			}
 		}
 		req.Values[p] = val

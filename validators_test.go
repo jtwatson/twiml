@@ -3,6 +3,8 @@ package twiml
 import "testing"
 
 func Test_validSipURI(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		v     interface{}
 		param string
@@ -21,7 +23,8 @@ func Test_validSipURI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validSipURI(tt.args.v, tt.args.param); (err != nil) != tt.wantErr {
+			t.Parallel()
+			if err := validSIPURI(tt.args.v, tt.args.param); (err != nil) != tt.wantErr {
 				t.Errorf("validSipURI() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
