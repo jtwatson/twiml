@@ -8,6 +8,7 @@ import (
 )
 
 func TestResponse_Render(t *testing.T) {
+	t.Parallel()
 
 	ctx := context.Background()
 
@@ -90,6 +91,7 @@ func TestResponse_Render(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := tt.response.Render(ctx)
 			if err != nil {
 				t.Errorf("Response.Render() = %v, want %v", err, tt.wantErr)

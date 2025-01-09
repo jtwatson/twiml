@@ -8,6 +8,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/go-playground/errors/v5"
 	"go.opencensus.io/trace"
 )
 
@@ -49,42 +50,49 @@ func NewResponse() *Response {
 // Gather adds the Gather verb to the response
 func (r *Response) Gather(gather *Gather) *Response {
 	r.Verbs = append(r.Verbs, gather)
+
 	return r
 }
 
 // Dial adds the dial verb to the response
 func (r *Response) Dial(dial *Dial) *Response {
 	r.Verbs = append(r.Verbs, dial)
+
 	return r
 }
 
 // Say adds the say verb to the Response
 func (r *Response) Say(say *Say) *Response {
 	r.Verbs = append(r.Verbs, say)
+
 	return r
 }
 
 // Play adds the play verb to the Response
 func (r *Response) Play(play *Play) *Response {
 	r.Verbs = append(r.Verbs, play)
+
 	return r
 }
 
 // Start adds the start verb to the Response
 func (r *Response) Start(start *Start) *Response {
 	r.Verbs = append(r.Verbs, start)
+
 	return r
 }
 
 // Pause appends a Pause verb to Dial
 func (r *Response) Pause(length uint) *Response {
 	r.Verbs = append(r.Verbs, NewPause(length))
+
 	return r
 }
 
 // Redirect appends a Redirect verb to Response
 func (r *Response) Redirect(redirect *Redirect) *Response {
 	r.Verbs = append(r.Verbs, redirect)
+
 	return r
 }
 
@@ -98,7 +106,7 @@ func (r *Response) Render(ctx context.Context) ([]byte, error) {
 	enc := xml.NewEncoder(buff)
 	enc.Indent("", "  ")
 	if err := enc.Encode(r); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "xml.Encoder.Encode()")
 	}
 	span.AddAttributes(trace.StringAttribute("twiml", buff.String()))
 
@@ -114,13 +122,18 @@ func (r *Response) RenderTo(ctx context.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(res)
-	return err
+
+	if _, err := w.Write(res); err != nil {
+		return errors.Wrap(err, "io.Writer.Write()")
+	}
+
+	return nil
 }
 
 // Hangup adds the hangup verb to the Response
 func (r *Response) Hangup() *Response {
 	r.Verbs = append(r.Verbs, &Hangup{})
+
 	return r
 }
 
@@ -141,12 +154,14 @@ func NewDial() *Dial {
 // Number appends a Number verb to Dial
 func (d *Dial) Number(number *Number) *Dial {
 	d.Verbs = append(d.Verbs, number)
+
 	return d
 }
 
 // Conference appends a Conference verb to Dial
 func (d *Dial) Conference(conference *Conference) *Dial {
 	d.Verbs = append(d.Verbs, conference)
+
 	return d
 }
 
@@ -191,12 +206,14 @@ func NewSay(msg string) *Say {
 // SetVoice sets the voice value
 func (s *Say) SetVoice(voice VoiceType) *Say {
 	s.Voice = voice
+
 	return s
 }
 
 // SetLoop sets the Loop value
 func (s *Say) SetLoop(loop uint) *Say {
 	s.Loop = loop
+
 	return s
 }
 
@@ -237,42 +254,49 @@ func NewGather() *Gather {
 // Say appends a Say verb to Gather
 func (g *Gather) Say(say *Say) *Gather {
 	g.Verbs = append(g.Verbs, say)
+
 	return g
 }
 
 // Pause appends a Pause verb to Gather
 func (g *Gather) Pause(length uint) *Gather {
 	g.Verbs = append(g.Verbs, NewPause(length))
+
 	return g
 }
 
 // SetInput sets the input attribute
 func (g *Gather) SetInput(input string) *Gather {
 	g.Input = input
+
 	return g
 }
 
 // SetAction sets the action attribute
 func (g *Gather) SetAction(action string) *Gather {
 	g.Action = action
+
 	return g
 }
 
 // SetMethod sets the method attribute
 func (g *Gather) SetMethod(method MethodType) *Gather {
 	g.Method = method
+
 	return g
 }
 
 // SetTimeout sets the timeout attribute
 func (g *Gather) SetTimeout(timeout uint) *Gather {
 	g.Timeout = timeout
+
 	return g
 }
 
 // SetNumDigits sets the numDigits attribute
 func (g *Gather) SetNumDigits(numDigits uint) *Gather {
 	g.NumDigits = numDigits
+
 	return g
 }
 
@@ -302,6 +326,7 @@ func NewRedirect(redirect string) *Redirect {
 // SetMethod sets the method attribute
 func (r *Redirect) SetMethod(method MethodType) *Redirect {
 	r.Method = method
+
 	return r
 }
 
@@ -354,152 +379,170 @@ func NewConference(conferenceName string) *Conference {
 // SetMuted sets the muted attribute
 func (c *Conference) SetMuted(muted bool) *Conference {
 	c.Muted = muted
+
 	return c
 }
 
 // SetBeep sets the beep attribute
 func (c *Conference) SetBeep(beep BeepType) *Conference {
 	c.Beep = beep
+
 	return c
 }
 
 // SetStartConferenceOnEnter sets the startConferenceOnEnter attribute
 func (c *Conference) SetStartConferenceOnEnter(startConferenceOnEnter bool) *Conference {
 	c.StartConferenceOnEnter = &startConferenceOnEnter
+
 	return c
 }
 
 // SetEndConferenceOnExit sets the endConferenceOnExit attribute
 func (c *Conference) SetEndConferenceOnExit(endConferenceOnExit bool) *Conference {
 	c.EndConferenceOnExit = endConferenceOnExit
+
 	return c
 }
 
 // SetWaitURL sets the waitURL attribute
 func (c *Conference) SetWaitURL(waitURL string) *Conference {
 	c.WaitURL = &waitURL
+
 	return c
 }
 
 // SetWaitMethod sets the waitMethod attribute
 func (c *Conference) SetWaitMethod(waitMethod MethodType) *Conference {
 	c.WaitMethod = waitMethod
+
 	return c
 }
 
 // SetMaxParticipants sets the maxParticipants attribute
 func (c *Conference) SetMaxParticipants(maxParticipants int) *Conference {
 	c.MaxParticipants = maxParticipants
+
 	return c
 }
 
 // SetRecord sets the record attribute
 func (c *Conference) SetRecord(record string) *Conference {
 	c.Record = record
+
 	return c
 }
 
 // SetRegion sets the region attribute
 func (c *Conference) SetRegion(region string) *Conference {
 	c.Region = region
+
 	return c
 }
 
 // SetTrim sets the trim attribute
 func (c *Conference) SetTrim(trim string) *Conference {
 	c.Trim = trim
+
 	return c
 }
 
 // SetCoach sets the coach attribute
 func (c *Conference) SetCoach(coach string) *Conference {
 	c.Coach = coach
+
 	return c
 }
 
 // SetStatusCallbackEvent sets the statusCallbackEvent attribute
-func (c *Conference) SetStatusCallbackEvent(statusCallbackEvent conferenceCallbackEvents) *Conference {
+func (c *Conference) SetStatusCallbackEvent(statusCallbackEvent ConferenceCallbackEvent) *Conference {
 	c.StatusCallbackEvent = string(statusCallbackEvent)
+
 	return c
 }
 
 // SetStatusCallback sets the statusCallback attribute
 func (c *Conference) SetStatusCallback(statusCallback string) *Conference {
 	c.StatusCallback = statusCallback
+
 	return c
 }
 
 // SetStatusCallbackMethod sets the statusCallbackMethod attribute
 func (c *Conference) SetStatusCallbackMethod(statusCallbackMethod MethodType) *Conference {
 	c.StatusCallbackMethod = statusCallbackMethod
+
 	return c
 }
 
 // SetRecordingStatusCallback sets the recordingStatusCallback attribute
 func (c *Conference) SetRecordingStatusCallback(recordingStatusCallback string) *Conference {
 	c.RecordingStatusCallback = recordingStatusCallback
+
 	return c
 }
 
 // SetRecordingStatusCallbackMethod sets the recordingStatusCallbackMethod attribute
 func (c *Conference) SetRecordingStatusCallbackMethod(recordingStatusCallbackMethod MethodType) *Conference {
 	c.RecordingStatusCallbackMethod = recordingStatusCallbackMethod
+
 	return c
 }
 
 // SetRecordingStatusCallbackEvent sets the recordingStatusCallbackEvent attribute
 func (c *Conference) SetRecordingStatusCallbackEvent(recordingStatusCallbackEvent string) *Conference {
 	c.RecordingStatusCallbackEvent = recordingStatusCallbackEvent
+
 	return c
 }
 
 // SetEventCallbackURL sets the eventCallbackURL attribute
 func (c *Conference) SetEventCallbackURL(eventCallbackURL string) *Conference {
 	c.EventCallbackURL = eventCallbackURL
+
 	return c
 }
 
 // start end join leave mute hold speaker
-type conferenceCallbackEvents string
+type ConferenceCallbackEvent string
 
 // ConferenceCallbackEvents enables specific Callback Events
-func ConferenceCallbackEvents() conferenceCallbackEvents {
-	return conferenceCallbackEvents("")
+func ConferenceCallbackEvents() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent("")
 }
 
 // Start enables the Callback Event to indicate Conference has Started
-func (c conferenceCallbackEvents) Start() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s start", c), " "))
+func (c ConferenceCallbackEvent) Start() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s start", c), " "))
 }
 
 // End enables the Callback Event to indicate Conference has Ended
-func (c conferenceCallbackEvents) End() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s end", c), " "))
+func (c ConferenceCallbackEvent) End() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s end", c), " "))
 }
 
 // Join enables the Callback Event to indicate Participant has joined
-func (c conferenceCallbackEvents) Join() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s join", c), " "))
+func (c ConferenceCallbackEvent) Join() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s join", c), " "))
 }
 
 // Leave enables the Callback Event to indicate Participant has left
-func (c conferenceCallbackEvents) Leave() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s leave", c), " "))
+func (c ConferenceCallbackEvent) Leave() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s leave", c), " "))
 }
 
 // Mute enables the Callback Event to indicate Participant has been muted/unmuted
-func (c conferenceCallbackEvents) Mute() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s mute", c), " "))
+func (c ConferenceCallbackEvent) Mute() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s mute", c), " "))
 }
 
 // Hold enables the Callback Event to indicate Participant has been held
-func (c conferenceCallbackEvents) Hold() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s hold", c), " "))
+func (c ConferenceCallbackEvent) Hold() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s hold", c), " "))
 }
 
 // Speaker enables the Callback Event to indicate Participant has started/stoped speaking
-func (c conferenceCallbackEvents) Speaker() conferenceCallbackEvents {
-	return conferenceCallbackEvents(strings.TrimLeft(fmt.Sprintf("%s speaker", c), " "))
+func (c ConferenceCallbackEvent) Speaker() ConferenceCallbackEvent {
+	return ConferenceCallbackEvent(strings.TrimLeft(fmt.Sprintf("%s speaker", c), " "))
 }
 
 // Play represents the TwiML Play verb
@@ -518,12 +561,14 @@ func NewPlay(msg string) *Play {
 // SetDigits sets the digits value
 func (p *Play) SetDigits(digits string) *Play {
 	p.Digits = digits
+
 	return p
 }
 
 // SetLoop sets the Loop value
 func (p *Play) SetLoop(loop uint) *Play {
 	p.Loop = loop
+
 	return p
 }
 
@@ -541,6 +586,7 @@ func NewStart() *Start {
 // Stream adds the stream verb to the Start
 func (s *Start) Stream(stream *Stream) *Start {
 	s.Verbs = append(s.Verbs, stream)
+
 	return s
 }
 
@@ -563,36 +609,42 @@ func NewStream() *Stream {
 // SetTrack sets the track value
 func (s *Stream) SetTrack(track TrackType) *Stream {
 	s.Track = track
+
 	return s
 }
 
 // SetName sets the Name attribute
 func (s *Stream) SetName(name string) *Stream {
 	s.Name = name
+
 	return s
 }
 
 // SetURL sets the URL attribute
 func (s *Stream) SetURL(url string) *Stream {
 	s.URL = url
+
 	return s
 }
 
 // SetStatusCallback sets the statusCallback attribute
 func (s *Stream) SetStatusCallback(statusCallback string) *Stream {
 	s.StatusCallback = statusCallback
+
 	return s
 }
 
 // SetStatusCallbackMethod sets the statusCallbackMethod attribute
 func (s *Stream) SetStatusCallbackMethod(statusCallbackMethod MethodType) *Stream {
 	s.StatusCallbackMethod = statusCallbackMethod
+
 	return s
 }
 
 // Parameter adds the stream verb to the Start
 func (s *Stream) Parameter(stream *Parameter) *Stream {
 	s.Verbs = append(s.Verbs, stream)
+
 	return s
 }
 
@@ -611,12 +663,14 @@ func NewParameter() *Parameter {
 // SetName sets the Name attribute
 func (s *Parameter) SetName(name string) *Parameter {
 	s.Name = name
+
 	return s
 }
 
 // SetValue sets the value attribute
 func (s *Parameter) SetValue(value string) *Parameter {
 	s.Value = value
+
 	return s
 }
 
