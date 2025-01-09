@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2](https://github.com/jtwatson/twiml/compare/v0.0.1...v0.0.2) (2025-01-09)
+
+
+### Features
+
+* Return CallDuration() as a time.Duration instead of int ([#9](https://github.com/jtwatson/twiml/issues/9)) ([865a858](https://github.com/jtwatson/twiml/commit/865a858948bba8229cfb6046ab42ceaf4f229c9c))
+
+
+### Bug Fixes
+
+* Fix release version ([#11](https://github.com/jtwatson/twiml/issues/11)) ([f0b1bff](https://github.com/jtwatson/twiml/commit/f0b1bff92a71253746e8f84d03aa4eaa9b8ea80f))
+
 ## [0.0.1](https://github.com/jtwatson/twiml/compare/v1.2.2...v0.0.1) (2022-11-08)
 
 
