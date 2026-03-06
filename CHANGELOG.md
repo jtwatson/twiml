@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/jtwatson/twiml/compare/v0.0.2...v0.0.3) (2026-03-06)
+
+
+### Bug Fixes
+
+* Fix Trivy vulnerability ([#14](https://github.com/jtwatson/twiml/issues/14)) ([8b97acb](https://github.com/jtwatson/twiml/commit/8b97acb903f846218390926cee0a69485c481cd0))
+
 ## [0.0.2](https://github.com/jtwatson/twiml/compare/v0.0.1...v0.0.2) (2025-01-09)
 
 
