@@ -502,7 +502,7 @@ func (c *Conference) SetEventCallbackURL(eventCallbackURL string) *Conference {
 	return c
 }
 
-// start end join leave mute hold speaker
+// ConferenceCallbackEvent can be one of start, end, join, leave, mute, hold, and speaker
 type ConferenceCallbackEvent string
 
 // ConferenceCallbackEvents enables specific Callback Events

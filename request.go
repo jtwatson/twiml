@@ -1,4 +1,4 @@
-// package twiml implements tooling to create, parse, and validate Twilio Twiml requests and responses
+// Package twiml implements tooling to create, parse, and validate Twilio Twiml requests and responses
 package twiml
 
 import (
@@ -109,6 +109,7 @@ func ParseNumber(v string) *ParsedNumber {
 	return number
 }
 
+// ParsedNumber represents a parsed phone number or SIP URI.
 type ParsedNumber struct {
 	Valid     bool
 	Number    string
