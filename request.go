@@ -83,13 +83,15 @@ func ParseNumber(v string) *ParsedNumber {
 		return number
 	}
 
-	if strings.HasPrefix(v, "app:") {
-		number.Valid = true
-		number.App = true
-		number.AppID = strings.TrimPrefix(v, "app:")
-		number.Number = number.AppID
+	if len(v) == 34 && strings.HasPrefix(v, "AP") {
+		if err := characterList(v[2:], "0123456789abcdefABCDEF"); err == nil {
+			number.Valid = true
+			number.App = true
+			number.AppID = v
+			number.Number = v
 
-		return number
+			return number
+		}
 	}
 
 	if strings.HasPrefix(v, "client:") {
