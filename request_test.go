@@ -50,6 +50,8 @@ func TestParseNumber(t *testing.T) {
 		{name: "Invalid SIP sip.domain.com", args: args{v: "sips:8005642365@domain.sip.us1.domain.com:5061"}, want: &ParsedNumber{Number: "sips:8005642365@domain.sip.us1.domain.com:5061", Raw: "sips:8005642365@domain.sip.us1.domain.com:5061"}},
 		{name: "Invalid SIP sip2.twilio.com", args: args{v: "sips:8005642365@domain.sip2.us1.twilio.com:5061"}, want: &ParsedNumber{Number: "sips:8005642365@domain.sip2.us1.twilio.com:5061", Raw: "sips:8005642365@domain.sip2.us1.twilio.com:5061"}},
 		{name: "Invalid SIP twilio.com", args: args{v: "sips:8005642365@sip.us1.twilio.com:5061"}, want: &ParsedNumber{Number: "sips:8005642365@sip.us1.twilio.com:5061", Raw: "sips:8005642365@sip.us1.twilio.com:5061"}},
+		{name: "Valid App", args: args{v: "app:AP12345678901234567890123456789012"}, want: &ParsedNumber{Valid: true, App: true, AppID: "AP12345678901234567890123456789012", Number: "AP12345678901234567890123456789012", Raw: "app:AP12345678901234567890123456789012"}},
+		{name: "Valid Client", args: args{v: "client:alice"}, want: &ParsedNumber{Valid: true, Client: true, ClientID: "alice", Number: "alice", Raw: "client:alice"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -23,7 +23,45 @@ func validFromOrTo(v interface{}, param string) error {
 		return nil
 	}
 
+	if err := validClientOrApp(v, param); err == nil {
+		return nil
+	}
+
 	return err
+}
+
+// validClientOrApp checks that a valid client or app identifier is provided
+func validClientOrApp(v interface{}, param string) error {
+	switch num := v.(type) {
+	case string:
+		if num == "" {
+			if param == allowempty {
+				return nil
+			}
+
+			return errors.New("Required")
+		}
+		if strings.HasPrefix(num, "client:") || strings.HasPrefix(num, "app:") {
+			return nil
+		}
+
+		return errors.New("invalid client or app identifier")
+	case *string:
+		if num == nil {
+			if param == allowempty {
+				return nil
+			}
+
+			return errors.New("Required")
+		}
+		if strings.HasPrefix(*num, "client:") || strings.HasPrefix(*num, "app:") {
+			return nil
+		}
+
+		return errors.New("invalid client or app identifier")
+	default:
+		return fmt.Errorf("validClientOrApp: Unexpected type %T", num)
+	}
 }
 
 // validPhoneNumber checks that a valid phone number is provided

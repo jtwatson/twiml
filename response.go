@@ -96,6 +96,13 @@ func (r *Response) Redirect(redirect *Redirect) *Response {
 	return r
 }
 
+// Connect adds the connect verb to the Response
+func (r *Response) Connect(connect *Connect) *Response {
+	r.Verbs = append(r.Verbs, connect)
+
+	return r
+}
+
 // Render returns the rendered twiml response
 func (r *Response) Render(ctx context.Context) ([]byte, error) {
 	_, span := trace.StartSpan(ctx, "twiml.Response.Render()")
@@ -588,6 +595,40 @@ func (s *Start) Stream(stream *Stream) *Start {
 	s.Verbs = append(s.Verbs, stream)
 
 	return s
+}
+
+// Connect represents the TwiML Connect verb
+type Connect struct {
+	XMLName xml.Name   `xml:"Connect"`
+	Action  string     `xml:"action,attr,omitempty"`
+	Method  MethodType `xml:"method,attr,omitempty"`
+	Verbs   []interface{}
+}
+
+// NewConnect returns a Connect verb
+func NewConnect() *Connect {
+	return &Connect{}
+}
+
+// Stream appends a Stream verb to Connect
+func (c *Connect) Stream(stream *Stream) *Connect {
+	c.Verbs = append(c.Verbs, stream)
+
+	return c
+}
+
+// SetAction sets the action attribute
+func (c *Connect) SetAction(action string) *Connect {
+	c.Action = action
+
+	return c
+}
+
+// SetMethod sets the method attribute
+func (c *Connect) SetMethod(method MethodType) *Connect {
+	c.Method = method
+
+	return c
 }
 
 // Stream represents the TwiML Stream verb

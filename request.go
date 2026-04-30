@@ -83,6 +83,24 @@ func ParseNumber(v string) *ParsedNumber {
 		return number
 	}
 
+	if strings.HasPrefix(v, "app:") {
+		number.Valid = true
+		number.App = true
+		number.AppID = strings.TrimPrefix(v, "app:")
+		number.Number = number.AppID
+
+		return number
+	}
+
+	if strings.HasPrefix(v, "client:") {
+		number.Valid = true
+		number.Client = true
+		number.ClientID = strings.TrimPrefix(v, "client:")
+		number.Number = number.ClientID
+
+		return number
+	}
+
 	u, err := parseSIPURI(v)
 	if err != nil {
 		return number
@@ -117,6 +135,10 @@ type ParsedNumber struct {
 	SIPDomain string
 	Region    string
 	Raw       string
+	App       bool
+	AppID     string
+	Client    bool
+	ClientID  string
 }
 
 // FormatNumber formates a number to E164 format
