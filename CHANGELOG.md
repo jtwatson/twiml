@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.4](https://github.com/jtwatson/twiml/compare/v0.0.3...v0.0.4) (2026-04-30)
+
+
+### Features
+
+* Add support for App and Client Sids in the To/From fields ([#17](https://github.com/jtwatson/twiml/issues/17)) ([d00b9f1](https://github.com/jtwatson/twiml/commit/d00b9f1e53e1eb01858633e410dc0fae0eef7aac))
+* Add support for Connect ([#17](https://github.com/jtwatson/twiml/issues/17)) ([d00b9f1](https://github.com/jtwatson/twiml/commit/d00b9f1e53e1eb01858633e410dc0fae0eef7aac))
+
 ## [0.0.3](https://github.com/jtwatson/twiml/compare/v0.0.2...v0.0.3) (2026-03-06)
 
 
