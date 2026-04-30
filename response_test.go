@@ -76,6 +76,22 @@ func TestResponse_Render(t *testing.T) {
   <Redirect method="POST">%s</Redirect>
 </Response>`
 
+	response4 := NewResponse().
+		Connect(NewConnect().
+			SetAction("http://my.action.url").
+			SetMethod(Post).
+			Stream(NewStream().
+				SetURL("wss://my.stream.url").
+				SetName("my-stream-name").
+				SetTrack(InboundTrack)))
+
+	xml4 := header + `
+<Response>
+  <Connect action="http://my.action.url" method="POST">
+    <Stream track="inbound_track" name="my-stream-name" url="wss://my.stream.url"></Stream>
+  </Connect>
+</Response>`
+
 	tests := []struct {
 		name     string
 		response *Response
@@ -85,7 +101,7 @@ func TestResponse_Render(t *testing.T) {
 		{name: "Test1", response: response1, want: xml1},
 		{name: "Test2", response: response2, want: xml2},
 		{name: "Test3", response: response3, want: xml3},
-		{name: "Test4", response: response1, want: xml1},
+		{name: "Test4", response: response4, want: xml4},
 		{name: "Test5", response: response1, want: xml1},
 	}
 
