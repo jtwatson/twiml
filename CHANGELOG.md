@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/jtwatson/twiml/compare/v0.0.4...v0.0.5) (2026-04-30)
+
+
+### Bug Fixes
+
+* Fix the parsing of a TwiML App Sid that can appear in To/From fields ([#19](https://github.com/jtwatson/twiml/issues/19)) ([0cb2ea9](https://github.com/jtwatson/twiml/commit/0cb2ea94c1e5110fbbda16dc4d245c344a395602))
+
 ## [0.0.4](https://github.com/jtwatson/twiml/compare/v0.0.3...v0.0.4) (2026-04-30)
 
 
