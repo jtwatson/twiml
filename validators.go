@@ -49,6 +49,11 @@ func validClientOrApp(v interface{}, param string) error {
 				return nil
 			}
 		}
+		if len(num) == 38 && strings.HasPrefix(num, "app:AP") {
+			if err := characterList(num[6:], "0123456789abcdefABCDEF"); err == nil {
+				return nil
+			}
+		}
 
 		return errors.New("invalid client or app identifier")
 	case *string:
@@ -64,6 +69,11 @@ func validClientOrApp(v interface{}, param string) error {
 		}
 		if len(*num) == 34 && strings.HasPrefix(*num, "AP") {
 			if err := characterList((*num)[2:], "0123456789abcdefABCDEF"); err == nil {
+				return nil
+			}
+		}
+		if len(*num) == 38 && strings.HasPrefix(*num, "app:AP") {
+			if err := characterList((*num)[6:], "0123456789abcdefABCDEF"); err == nil {
 				return nil
 			}
 		}

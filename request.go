@@ -94,6 +94,18 @@ func ParseNumber(v string) *ParsedNumber {
 		}
 	}
 
+	if len(v) == 38 && strings.HasPrefix(v, "app:AP") {
+		appID := strings.TrimPrefix(v, "app:")
+		if err := characterList(appID[2:], "0123456789abcdefABCDEF"); err == nil {
+			number.Valid = true
+			number.App = true
+			number.AppID = appID
+			number.Number = appID
+
+			return number
+		}
+	}
+
 	if strings.HasPrefix(v, "client:") {
 		number.Valid = true
 		number.Client = true
