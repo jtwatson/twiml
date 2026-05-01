@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.6](https://github.com/jtwatson/twiml/compare/v0.0.5...v0.0.6) (2026-05-01)
+
+
+### Bug Fixes
+
+* Add support for the `app:` prefix in To field for TwiML Apps ([#22](https://github.com/jtwatson/twiml/issues/22)) ([d0d407d](https://github.com/jtwatson/twiml/commit/d0d407d7d5c51ade66cb1c7e0373f8f06ddd9051))
+
 ## [0.0.5](https://github.com/jtwatson/twiml/compare/v0.0.4...v0.0.5) (2026-04-30)
 
 
